@@ -15,6 +15,7 @@ model User {
   password  String
   role      String   
   tasks     Task[]
+  projects  Project[]
 }
 
 model Project {
@@ -23,6 +24,7 @@ model Project {
   description String?
   createdBy   Int
   tasks       Task[]
+  createdByUser User @relation(fields: [createdBy], references: [id])
 }
 
 model Task {
