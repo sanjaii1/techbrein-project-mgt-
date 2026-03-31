@@ -1,27 +1,13 @@
+import "dotenv/config";
 import prisma from "../utils/prisma.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import pkgBcrypt from "bcryptjs";
+const bcrypt = pkgBcrypt;
+import pkgJwt from "jsonwebtoken";
+const jwt = pkgJwt;
 
-// Register (optional but recommended)
+// TEMPORARY TEST
 export const register = async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role,
-      },
-    });
-
-    res.status(201).json({ success: true, data: user });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  return res.json({ success: true, message: "TEST HIT" });
 };
 
 // Login
