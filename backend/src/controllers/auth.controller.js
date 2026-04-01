@@ -12,9 +12,46 @@ const jwt = pkgJwt;
  *   description: Authentication endpoints
  */
 
-// TEMPORARY TEST
 export const register = async (req, res) => {
-  return res.json({ success: true, message: "TEST HIT" });
+  try {
+    const { name, email, password, role } = req.body;
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: role || "user",
+      },
+    });
+
+    // Generate token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET || "secrt_key_123", // Backup secret for dev setup
+      { expiresIn: "1d" }
+    );
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    if (error.code === "P2002") {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    res.status(500).json({ message: error.message });
+  }
 };
 
 /**

@@ -6,7 +6,13 @@ class ProjectRepository {
   }
 
   async getProjects() {
-    return await prisma.project.findMany();
+    return await prisma.project.findMany({
+      include: {
+        manager: {
+          select: { id: true, name: true, email: true, role: true }
+        }
+      }
+    });
   }
 
   async updateProject(id, data) {
