@@ -44,7 +44,7 @@ import taskService from "../services/task.service.js";
  */
 export const createTask = async (req, res, next) => {
   try {
-    const task = await taskService.createTask(req.body);
+    const task = await taskService.createTask(req.body, req.user);
     res.status(201).json({
       success: true,
       data: task,
@@ -87,7 +87,7 @@ export const updateTaskStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const task = await taskService.updateTaskStatus(id, status);
+    const task = await taskService.updateTaskStatus(id, status, req.user);
     res.json({
       success: true,
       data: task,
@@ -130,7 +130,7 @@ export const assignTask = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { assignedTo } = req.body;
-    const task = await taskService.assignTask(id, assignedTo);
+    const task = await taskService.assignTask(id, assignedTo, req.user);
     res.json({
       success: true,
       data: task,
