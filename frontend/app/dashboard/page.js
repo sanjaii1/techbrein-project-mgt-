@@ -62,8 +62,8 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto py-8">
       <div className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Dashboard Overview</h1>
-        <p className="text-slate-400">Welcome back! Here's what's happening today.</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">Dashboard Overview</h1>
+        <p className="text-slate-500">Welcome back! Here's what's happening today.</p>
       </div>
 
       {/* Stats Cards */}
@@ -80,8 +80,8 @@ export default function Dashboard() {
         {/* Projects Column */}
         <div className="glass p-6 rounded-2xl shadow-xl flex flex-col h-[500px]">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold tracking-wide text-white flex items-center gap-2">
-              <span className="text-blue-400">📁</span> Recent Projects
+            <h2 className="text-xl font-bold tracking-wide text-slate-900 flex items-center gap-2">
+              <span className="text-blue-500">📁</span> Recent Projects
             </h2>
           </div>
           <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scrollbar">
@@ -89,12 +89,12 @@ export default function Dashboard() {
               <div className="text-slate-500 text-center py-10">No projects found.</div>
             ) : (
               recentProjects.map(p => (
-                <div key={p.id} className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl p-4 transition-all group">
-                  <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                <div key={p.id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl p-4 transition-all group shadow-sm">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
                     {p.name || "Untitled Project"}
                   </h3>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400 line-clamp-1 max-w-[60%]">
+                    <span className="text-slate-500 line-clamp-1 max-w-[60%]">
                       {p.description || "No description"}
                     </span>
                     <span className="flex items-center gap-1.5 text-xs font-semibold bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full">
@@ -110,8 +110,8 @@ export default function Dashboard() {
         {/* Tasks Column */}
         <div className="glass p-6 rounded-2xl shadow-xl flex flex-col h-[500px]">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold tracking-wide text-white flex items-center gap-2">
-              <span className="text-violet-400">📋</span> Recent Tasks
+            <h2 className="text-xl font-bold tracking-wide text-slate-900 flex items-center gap-2">
+              <span className="text-violet-500">📋</span> Recent Tasks
             </h2>
           </div>
           <div className="overflow-y-auto pr-2 space-y-4 flex-1 custom-scrollbar">
@@ -119,28 +119,28 @@ export default function Dashboard() {
               <div className="text-slate-500 text-center py-10">No tasks found.</div>
             ) : (
               recentTasks.map(t => (
-                <div key={t.id} className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl p-4 transition-all">
+                <div key={t.id} className="bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl p-4 transition-all shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-base font-semibold text-white">
+                    <h3 className="text-base font-semibold text-slate-900">
                       {t.title}
                     </h3>
                     <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
-                      t.status === "todo" ? "bg-slate-700 text-slate-300" :
-                      t.status === "done" ? "bg-emerald-500/20 text-emerald-400" :
-                      "bg-amber-500/20 text-amber-400"
+                      t.status === "todo" ? "bg-slate-100 text-slate-600" :
+                      t.status === "done" ? "bg-emerald-500/10 text-emerald-600" :
+                      "bg-amber-500/10 text-amber-600"
                     }`}>
                       {t.status}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-sm mt-3 pt-3 border-t border-slate-700/50">
-                    <span className="text-slate-400 flex items-center gap-1 text-xs">
-                      📁 Project: <span className="text-slate-300 font-medium">{t.project?.name || `[${t.projectId}]`}</span>
+                  <div className="flex justify-between items-center text-sm mt-3 pt-3 border-t border-slate-200">
+                    <span className="text-slate-500 flex items-center gap-1 text-xs">
+                      📁 Project: <span className="text-slate-700 font-medium">{t.project?.name || `[${t.projectId}]`}</span>
                     </span>
-                    <span className="flex items-center gap-1 border border-slate-700 bg-slate-800/80 rounded-full pl-1 pr-3 py-0.5 shadow-sm text-xs">
+                    <span className="flex items-center gap-1 border border-slate-200 bg-white rounded-full pl-1 pr-3 py-0.5 shadow-sm text-xs">
                        <span className="w-5 h-5 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full flex justify-center items-center text-[10px] text-white">
                           {t.user?.name?.[0]?.toUpperCase() || t.user?.email?.[0]?.toUpperCase() || "?"}
                        </span>
-                       <span className="text-slate-300 font-medium">
+                       <span className="text-slate-700 font-medium">
                          {t.user?.name || t.user?.email || "Unassigned"}
                        </span>
                     </span>
@@ -160,7 +160,7 @@ export default function Dashboard() {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: #334155;
+          background-color: #cbd5e1;
           border-radius: 10px;
         }
       `}</style>
@@ -174,11 +174,11 @@ function StatCard({ title, value, icon, gradient }) {
        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient} opacity-20 blur-2xl rounded-bl-[100px] transition-opacity group-hover:opacity-40`}></div>
        <div className="p-6 relative z-10 flex flex-col h-full">
          <div className="flex justify-between items-start mb-4">
-           <span className="text-slate-400 font-semibold tracking-wide text-sm uppercase">{title}</span>
+           <span className="text-slate-600 font-semibold tracking-wide text-sm uppercase">{title}</span>
            <span className="text-2xl drop-shadow-md">{icon}</span>
          </div>
          <div className="mt-auto">
-           <h3 className="text-4xl font-extrabold text-white tracking-tight">{value}</h3>
+           <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight">{value}</h3>
          </div>
        </div>
     </div>

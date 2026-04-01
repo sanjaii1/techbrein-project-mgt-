@@ -26,10 +26,10 @@ export default function Tasks() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "TODO": return "bg-gray-500/20 text-gray-400";
-      case "IN_PROGRESS": return "bg-amber-500/20 text-amber-500";
-      case "DONE": return "bg-emerald-500/20 text-emerald-500";
-      default: return "bg-slate-500/20 text-slate-400";
+      case "TODO": return "bg-slate-100 text-slate-600 border border-slate-200";
+      case "IN_PROGRESS": return "bg-amber-50 text-amber-600 border border-amber-200";
+      case "DONE": return "bg-emerald-50 text-emerald-600 border border-emerald-200";
+      default: return "bg-slate-100 text-slate-600 border border-slate-200";
     }
   };
 
@@ -37,8 +37,8 @@ export default function Tasks() {
     <div className="max-w-6xl mx-auto py-10 px-4">
       <div className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2">My Tasks</h1>
-          <p className="text-slate-400">Manage your workload efficiently</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">My Tasks</h1>
+          <p className="text-slate-500">Manage your workload efficiently</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
@@ -53,35 +53,39 @@ export default function Tasks() {
            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tasks.length === 0 ? (
-            <div className="glass p-12 text-center rounded-3xl">
-              <span className="text-4xl mb-4 block">🏝️</span>
-              <h3 className="text-xl font-bold text-white mb-2">Inbox Zen</h3>
-              <p className="text-slate-400">You have no tasks to do. Enjoy your free time!</p>
+            <div className="glass p-12 text-center rounded-3xl border border-slate-200 col-span-full max-w-2xl mx-auto mt-8">
+              <span className="text-5xl mb-4 block">🏝️</span>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Inbox Zen</h3>
+              <p className="text-slate-500">You have no tasks to do. Enjoy your free time!</p>
             </div>
           ) : (
             tasks.map((t) => (
               <div
                 key={t.id}
-                className="glass p-5 rounded-2xl flex items-center justify-between group hover:border-[#334155]/80 transition-all shadow-md"
+                className="bg-white p-6 rounded-2xl hover:shadow-md transition-all cursor-pointer group shadow-sm border border-slate-200 flex flex-col h-full"
               >
-                <div className="flex items-center gap-6">
-                  <div className="w-10 h-10 bg-[#1e293b] rounded-lg flex items-center justify-center text-xl group-hover:bg-blue-500/10 transition-all">
-                    📝
+                <div className="flex justify-between items-start mb-4">
+                  <div className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center text-2xl group-hover:bg-violet-200 transition-all">
+                    📋
                   </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-0.5">{t.title || "Untitled Task"}</h4>
-                    <p className="text-sm text-slate-400">Assigned by Project #{t.projectId}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-6">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusColor(t.status)}`}>
                     {t.status || "TODO"}
                   </span>
-                  <button className="text-slate-500 hover:text-white transition-all">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                </div>
+                
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t.title || "Untitled Task"}</h3>
+                <p className="text-slate-500 text-sm line-clamp-3 mb-6 flex-1">
+                  {t.description || "No description provided for this task."}
+                </p>
+                
+                <div className="flex justify-between items-center pt-6 border-t border-slate-200 mt-auto">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Project #{t.projectId}
+                  </span>
+                  <button className="text-slate-400 hover:text-blue-600 transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
                     </svg>
                   </button>

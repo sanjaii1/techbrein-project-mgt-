@@ -22,20 +22,20 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-[#070b14] overflow-hidden">
+    <div className="flex h-screen items-center justify-center bg-slate-50 overflow-hidden">
       {/* Background blobs */}
-      <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-500/20 rounded-full blur-[128px]" />
-      <div className="absolute bottom-0 -right-4 w-72 h-72 bg-indigo-500/20 rounded-full blur-[128px]" />
+      <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-300/40 rounded-full blur-[128px]" />
+      <div className="absolute bottom-0 -right-4 w-72 h-72 bg-indigo-300/40 rounded-full blur-[128px]" />
 
-      <div className="glass w-full max-w-md p-8 rounded-2xl shadow-2xl relative">
+      <div className="glass w-full max-w-md p-8 rounded-2xl shadow-xl border border-slate-200/60 relative">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-slate-400">Login to manage your projects effortlessly</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</h1>
+          <p className="text-slate-500">Login to manage your projects effortlessly</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
             <input
               type="email"
               placeholder="name@company.com"
@@ -47,7 +47,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
             <input
               type="password"
               placeholder="••••••••"
@@ -58,7 +58,7 @@ export default function Login() {
             />
           </div>
 
-          {error && <p className="text-rose-400 text-sm mt-1">{error}</p>}
+          {error && <p className="text-rose-500 text-sm mt-1 font-medium">{error}</p>}
 
           <button
             type="submit"
@@ -69,7 +69,7 @@ export default function Login() {
         </form>
 
         <div className="mt-8 text-center text-slate-500 text-sm">
-          Don't have an account? <span className="text-blue-400 cursor-pointer hover:underline">Contact Admin</span>
+          Don't have an account? <span className="text-blue-600 font-medium cursor-pointer hover:underline">Contact Admin</span>
         </div>
       </div>
     </div>
