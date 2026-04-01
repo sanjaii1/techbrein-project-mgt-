@@ -7,13 +7,13 @@ import {
 } from "../controllers/project.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
-import { isAdmin } from "../middleware/role.middleware.js";
+import { authorizeRoles } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
-router.post("/", protect, isAdmin, createProject);
+router.post("/", protect, authorizeRoles("admin", "manager", "user"), createProject);
 router.get("/", protect, getProjects);
-router.put("/:id", protect, isAdmin, updateProject);
-router.delete("/:id", protect, isAdmin, deleteProject);
+router.put("/:id", protect, authorizeRoles("admin"), updateProject);
+router.delete("/:id", protect, authorizeRoles("admin"), deleteProject);
 
 export default router;

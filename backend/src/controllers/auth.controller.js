@@ -5,12 +5,44 @@ const bcrypt = pkgBcrypt;
 import pkgJwt from "jsonwebtoken";
 const jwt = pkgJwt;
 
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication endpoints
+ */
+
 // TEMPORARY TEST
 export const register = async (req, res) => {
   return res.json({ success: true, message: "TEST HIT" });
 };
 
-// Login
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;

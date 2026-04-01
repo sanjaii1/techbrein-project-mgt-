@@ -3,6 +3,49 @@ import prisma from "../utils/prisma.js";
 import pkgBcrypt from "bcryptjs";
 const bcrypt = pkgBcrypt;
 
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management endpoints
+ */
+
+/**
+ * @swagger
+ * /users:
+ *   post:
+ *     summary: Create a newly registered user (Admin, Manager, User)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - role
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created
+ *       400:
+ *         description: Email already exists
+ *       403:
+ *         description: Access denied
+ */
 // Create User (Admin only)
 export const createUser = async (req, res, next) => {
   try {
@@ -39,6 +82,20 @@ export const createUser = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Get all users (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users
+ *       403:
+ *         description: Access denied
+ */
 // List Users (Admin only)
 export const getUsers = async (req, res, next) => {
   try {

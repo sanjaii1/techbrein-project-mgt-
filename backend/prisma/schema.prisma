@@ -15,7 +15,8 @@ model User {
   password  String
   role      String   
   tasks     Task[]
-  projects  Project[]
+  projects  Project[] @relation("ProjectCreator")
+  managedProjects Project[] @relation("ProjectManager")
 }
 
 model Project {
@@ -23,8 +24,10 @@ model Project {
   name        String
   description String?
   createdBy   Int
+  managerId   Int?
   tasks       Task[]
-  createdByUser User @relation(fields: [createdBy], references: [id])
+  createdByUser User @relation("ProjectCreator", fields: [createdBy], references: [id])
+  manager       User? @relation("ProjectManager", fields: [managerId], references: [id])
 }
 
 model Task {

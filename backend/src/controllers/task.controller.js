@@ -1,21 +1,50 @@
-import prisma from "../utils/prisma.js";
+import taskService from "../services/task.service.js";
 
-// Create Task
+/**
+ * @swagger
+ * tags:
+ *   name: Tasks
+ *   description: Task management endpoints
+ */
+
+/**
+ * @swagger
+ * /tasks:
+ *   post:
+ *     summary: Create a new task
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - projectId
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               projectId:
+ *                 type: integer
+ *               assignedTo:
+ *                 type: integer
+ *               dueDate:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Task created successfully
+ *       403:
+ *         description: Access denied
+ */
 export const createTask = async (req, res, next) => {
   try {
-    const { title, description, projectId, assignedTo, dueDate } = req.body;
-
-    const task = await prisma.task.create({
-      data: {
-        title,
-        description,
-        status: "todo",
-        projectId,
-        assignedTo,
-        dueDate: dueDate ? new Date(dueDate) : null,
-      },
-    });
-
+    const task = await taskService.createTask(req.body);
     res.status(201).json({
       success: true,
       data: task,
@@ -25,17 +54,40 @@ export const createTask = async (req, res, next) => {
   }
 };
 
-// Update Task Status
+/**
+ * @swagger
+ * /tasks/{id}/status:
+ *   patch:
+ *     summary: Update task status
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Task status updated
+ */
 export const updateTaskStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
-    const task = await prisma.task.update({
-      where: { id: Number(id) },
-      data: { status },
-    });
-
+    const task = await taskService.updateTaskStatus(id, status);
     res.json({
       success: true,
       data: task,
@@ -45,17 +97,40 @@ export const updateTaskStatus = async (req, res, next) => {
   }
 };
 
-// Assign Task
+/**
+ * @swagger
+ * /tasks/{id}/assign:
+ *   patch:
+ *     summary: Assign a task to a user
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - assignedTo
+ *             properties:
+ *               assignedTo:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Task assigned
+ */
 export const assignTask = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { assignedTo } = req.body;
-
-    const task = await prisma.task.update({
-      where: { id: Number(id) },
-      data: { assignedTo },
-    });
-
+    const task = await taskService.assignTask(id, assignedTo);
     res.json({
       success: true,
       data: task,
@@ -65,34 +140,45 @@ export const assignTask = async (req, res, next) => {
   }
 };
 
-// Get Tasks (Filtering + Pagination)
+/**
+ * @swagger
+ * /tasks:
+ *   get:
+ *     summary: Get tasks
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: projectId
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: assignedTo
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: A list of tasks
+ */
 export const getTasks = async (req, res, next) => {
   try {
-    const { projectId, status, assignedTo, page = 1, limit = 10 } = req.query;
-
-    const filters = {};
-
-    if (projectId) filters.projectId = Number(projectId);
-    if (status) filters.status = status;
-    if (assignedTo) filters.assignedTo = Number(assignedTo);
-
-    const tasks = await prisma.task.findMany({
-      where: filters,
-      skip: (page - 1) * limit,
-      take: Number(limit),
-      include: {
-        project: true,
-        user: true,
-      },
-    });
-
-    const total = await prisma.task.count({ where: filters });
-
+    const result = await taskService.getTasks(req.query);
     res.json({
       success: true,
-      page: Number(page),
-      total,
-      data: tasks,
+      ...result,
     });
   } catch (error) {
     next(error);
