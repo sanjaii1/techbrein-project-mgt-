@@ -2,15 +2,48 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role === 'admin') setIsAdmin(true);
+
+        // Auto-logout user proactively when token expires naturally
+        if (payload.exp) {
+          const timeoutMs = (payload.exp * 1000) - Date.now();
+          if (timeoutMs <= 0) {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+          } else {
+            const timeoutId = setTimeout(() => {
+              localStorage.removeItem("token");
+              window.location.href = "/login";
+            }, timeoutMs);
+            return () => clearTimeout(timeoutId);
+          }
+        }
+      } catch (e) {
+        console.error("Token parsing error", e);
+      }
+    }
+  }, []);
 
   const links = [
     { href: "/dashboard", label: "Dashboard", icon: "📊" },
     { href: "/projects", label: "Projects", icon: "📁" },
     { href: "/tasks", label: "Tasks", icon: "✅" },
   ];
+
+  if (isAdmin) {
+    links.push({ href: "/users", label: "Users", icon: "👥" });
+  }
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col gap-8 min-h-screen shadow-sm">

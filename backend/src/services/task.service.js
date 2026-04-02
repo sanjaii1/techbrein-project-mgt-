@@ -100,6 +100,51 @@ class TaskService {
       data: tasks,
     };
   }
+
+  async updateTask(id, data, currentUser) {
+    const task = await prisma.task.findUnique({ 
+      where: { id: Number(id) },
+      include: { project: true }
+    });
+    if (!task) throw new Error("Task not found");
+
+    if (currentUser && currentUser.role === "manager") {
+      if (task.project.managerId !== currentUser.id) {
+        throw new Error("Not authorized to update this task.");
+      }
+    }
+
+    if (data.assignedTo) {
+      const user = await prisma.user.findUnique({ where: { id: Number(data.assignedTo) } });
+      if (!user) throw new Error("Assigned user not found");
+    }
+
+    const payload = {};
+    if (data.title !== undefined) payload.title = data.title;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.status !== undefined) payload.status = data.status;
+    if (data.projectId !== undefined) payload.projectId = Number(data.projectId);
+    if (data.assignedTo !== undefined) payload.assignedTo = data.assignedTo !== null && data.assignedTo !== "" ? Number(data.assignedTo) : null;
+    if (data.dueDate !== undefined) payload.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+
+    return await taskRepository.updateTask(id, payload);
+  }
+
+  async deleteTask(id, currentUser) {
+    const task = await prisma.task.findUnique({ 
+      where: { id: Number(id) },
+      include: { project: true }
+    });
+    if (!task) throw new Error("Task not found");
+
+    if (currentUser && currentUser.role === "manager") {
+      if (task.project.managerId !== currentUser.id) {
+        throw new Error("Not authorized to delete this task.");
+      }
+    }
+
+    return await taskRepository.deleteTask(id);
+  }
 }
 
 export default new TaskService();

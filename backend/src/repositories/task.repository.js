@@ -27,6 +27,12 @@ class TaskRepository {
   async countTasks(filters) {
     return await prisma.task.count({ where: filters });
   }
+
+  async deleteTask(id) {
+    return await prisma.task.delete({
+      where: { id: Number(id) },
+    });
+  }
 }
 
 export default new TaskRepository();

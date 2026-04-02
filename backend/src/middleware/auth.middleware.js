@@ -26,6 +26,12 @@ export const protect = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired or invalid token. Please log in again.",
+      });
+    }
     next(error);
   }
 };

@@ -10,6 +10,17 @@ class ProjectRepository {
       include: {
         manager: {
           select: { id: true, name: true, email: true, role: true }
+        },
+        tasks: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            dueDate: true,
+            user: {
+              select: { name: true }
+            }
+          }
         }
       }
     });

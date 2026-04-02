@@ -184,3 +184,71 @@ export const getTasks = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @swagger
+ * /tasks/{id}:
+ *   put:
+ *     summary: Update a task
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Task updated
+ */
+export const updateTask = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const task = await taskService.updateTask(id, req.body, req.user);
+    res.json({
+      success: true,
+      data: task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @swagger
+ * /tasks/{id}:
+ *   delete:
+ *     summary: Delete a task
+ *     tags: [Tasks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Task deleted
+ */
+export const deleteTask = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await taskService.deleteTask(id, req.user);
+    res.json({
+      success: true,
+      message: "Task deleted",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
