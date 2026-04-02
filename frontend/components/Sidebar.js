@@ -10,6 +10,12 @@ export default function Sidebar() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -31,6 +37,8 @@ export default function Sidebar() {
         }
       } catch (e) {
         console.error("Token parsing error", e);
+        localStorage.removeItem("token");
+        window.location.href = "/login";
       }
     }
   }, []);

@@ -198,6 +198,8 @@ export default function Users() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
+        centered
+        styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
         destroyOnClose
       >
         <Form

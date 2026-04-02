@@ -31,7 +31,10 @@ export default function Dashboard() {
       const tasks = tasksRes.data.data || [];
 
       // Calculate stats
-      const completedTasks = tasks.filter(t => t.status === "done" || t.status === "completed").length;
+      const completedTasks = tasks.filter(t => {
+         const s = t.status?.toLowerCase() || "";
+         return s === "done" || s === "completed";
+      }).length;
       
       setStats({
         totalProjects: projects.length,
@@ -125,8 +128,8 @@ export default function Dashboard() {
                       {t.title}
                     </h3>
                     <span className={`text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
-                      t.status === "todo" ? "bg-slate-100 text-slate-600" :
-                      t.status === "done" ? "bg-emerald-500/10 text-emerald-600" :
+                      t.status?.toLowerCase() === "todo" ? "bg-slate-100 text-slate-600" :
+                      t.status?.toLowerCase() === "done" ? "bg-emerald-500/10 text-emerald-600" :
                       "bg-amber-500/10 text-amber-600"
                     }`}>
                       {t.status}

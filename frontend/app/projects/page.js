@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Modal, Form, Input, Button, message, Popconfirm } from "antd";
+import { Modal, Form, Input, Button, message, Popconfirm, Select } from "antd";
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -14,10 +14,21 @@ export default function Projects() {
 
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     fetchProjects();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get("/users");
+      setUsers(res.data.data || []);
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   const fetchProjects = async () => {
     try {
@@ -208,6 +219,8 @@ export default function Projects() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
+        centered
+        styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
         destroyOnClose
       >
         <Form
@@ -232,10 +245,16 @@ export default function Projects() {
           </Form.Item>
 
           <Form.Item
-            label="Assign Manager ID (Optional)"
+            label="Assign Manager (Optional)"
             name="managerId"
           >
-            <Input type="number" placeholder="Enter user ID to manage this project" size="large" className="rounded-lg" />
+            <Select placeholder="Select a manager" size="large" className="rounded-lg" allowClear showSearch optionFilterProp="children">
+              {users.filter(u => u.role === "manager" || u.role === "admin").map(u => (
+                <Select.Option key={u.id} value={u.id}>
+                  {u.name} ({u.role})
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <div className="flex justify-end gap-3 mt-8">
@@ -292,6 +311,8 @@ export default function Projects() {
         title={<h2 className="text-xl font-bold text-slate-800">Project Details</h2>}
         open={!!viewingProject}
         onCancel={() => setViewingProject(null)}
+        centered
+        styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
         footer={[
           <Button key="close" type="primary" size="large" onClick={() => setViewingProject(null)} className="rounded-lg font-semibold bg-blue-600 hover:bg-blue-500">
             Close

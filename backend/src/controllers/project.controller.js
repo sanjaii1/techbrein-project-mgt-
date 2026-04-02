@@ -157,6 +157,12 @@ export const deleteProject = async (req, res, next) => {
       message: "Project deleted",
     });
   } catch (error) {
+    if (error.code === "P2003" && error.message.includes("Task_projectId_fkey")) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete this project because it contains active tasks. Please delete or reassign the tasks first.",
+      });
+    }
     next(error);
   }
 };

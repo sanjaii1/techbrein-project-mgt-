@@ -15,10 +15,26 @@ export default function Tasks() {
 
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [projectsList, setProjectsList] = useState([]);
+  const [usersList, setUsersList] = useState([]);
 
   useEffect(() => {
     fetchTasks();
+    fetchSupportData();
   }, []);
+
+  const fetchSupportData = async () => {
+    try {
+      const [projRes, userRes] = await Promise.all([
+        api.get("/projects"),
+        api.get("/users")
+      ]);
+      setProjectsList(projRes.data.data || []);
+      setUsersList(userRes.data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -221,6 +237,8 @@ export default function Tasks() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
+        centered
+        styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
         destroyOnClose
       >
         <Form
@@ -246,11 +264,17 @@ export default function Tasks() {
 
           <div className="grid grid-cols-2 gap-4">
              <Form.Item
-               label="Project ID"
+               label="Assign Project"
                name="projectId"
                rules={[{ required: true, message: "Required" }]}
              >
-               <Input type="number" placeholder="ID" size="large" className="rounded-lg" />
+               <Select placeholder="Select a Project" size="large" className="rounded-lg" showSearch optionFilterProp="children">
+                 {projectsList.map(p => (
+                   <Select.Option key={p.id} value={p.id}>
+                     #{p.id} - {p.name}
+                   </Select.Option>
+                 ))}
+               </Select>
              </Form.Item>
 
              <Form.Item
@@ -268,10 +292,16 @@ export default function Tasks() {
 
           <div className="grid grid-cols-2 gap-4">
              <Form.Item
-               label="Assignee ID"
+               label="Team Assignee (Optional)"
                name="assignedTo"
              >
-               <Input type="number" placeholder="User ID" size="large" className="rounded-lg" />
+               <Select placeholder="Select a user" size="large" className="rounded-lg" allowClear showSearch optionFilterProp="children">
+                 {usersList.map(u => (
+                   <Select.Option key={u.id} value={u.id}>
+                     {u.name} ({u.role})
+                   </Select.Option>
+                 ))}
+               </Select>
              </Form.Item>
 
              <Form.Item
@@ -307,6 +337,8 @@ export default function Tasks() {
         </div>}
         open={!!viewingTask}
         onCancel={() => setViewingTask(null)}
+        centered
+        styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
         footer={[
           <Button key="close" type="primary" size="large" onClick={() => setViewingTask(null)} className="rounded-lg font-semibold bg-blue-600 hover:bg-blue-500">
             Close
