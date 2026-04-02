@@ -18,10 +18,18 @@ export default function Tasks() {
   const [projectsList, setProjectsList] = useState([]);
   const [usersList, setUsersList] = useState([]);
 
+  // Active filters
+  const [filterProject, setFilterProject] = useState(undefined);
+  const [filterStatus, setFilterStatus] = useState(undefined);
+  const [filterUser, setFilterUser] = useState(undefined);
+
   useEffect(() => {
-    fetchTasks();
     fetchSupportData();
   }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [filterProject, filterStatus, filterUser]);
 
   const fetchSupportData = async () => {
     try {
@@ -38,7 +46,13 @@ export default function Tasks() {
 
   const fetchTasks = async () => {
     try {
-      const res = await api.get("/tasks");
+      setLoading(true);
+      const query = new URLSearchParams();
+      if (filterProject) query.append("projectId", filterProject);
+      if (filterStatus) query.append("status", filterStatus);
+      if (filterUser) query.append("assignedTo", filterUser);
+
+      const res = await api.get(`/tasks?${query.toString()}`);
       setTasks(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch tasks");
@@ -136,6 +150,49 @@ export default function Tasks() {
         >
           Add Task
         </button>
+      </div>
+
+      {/* Filters Bar */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center">
+        <span className="font-semibold text-slate-700 flex items-center gap-2 border-r border-slate-200 pr-4">
+          <span className="text-xl">🔍</span> Filters
+        </span>
+
+        <Select 
+          placeholder="Filter by Project" 
+          allowClear 
+          showSearch
+          optionFilterProp="children"
+          className="min-w-[200px]" 
+          value={filterProject} 
+          onChange={setFilterProject}
+        >
+          {projectsList.map(p => <Select.Option key={p.id} value={p.id}>#{p.id} - {p.name}</Select.Option>)}
+        </Select>
+
+        <Select 
+          placeholder="Filter by Status" 
+          allowClear 
+          className="min-w-[160px]" 
+          value={filterStatus} 
+          onChange={setFilterStatus}
+        >
+          <Select.Option value="TODO">To Do</Select.Option>
+          <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
+          <Select.Option value="DONE">Done</Select.Option>
+        </Select>
+
+        <Select 
+          placeholder="Filter by Assignee" 
+          allowClear 
+          showSearch
+          optionFilterProp="children"
+          className="min-w-[220px]" 
+          value={filterUser} 
+          onChange={setFilterUser}
+        >
+          {usersList.map(u => <Select.Option key={u.id} value={u.id}>{u.name} ({u.role})</Select.Option>)}
+        </Select>
       </div>
 
       {loading ? (

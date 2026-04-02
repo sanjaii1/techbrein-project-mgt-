@@ -31,7 +31,7 @@ class TaskService {
     const payload = {
       title: data.title,
       description: data.description,
-      status: "todo",
+      status: data.status || "todo",
       projectId: Number(data.projectId),
       assignedTo: data.assignedTo ? Number(data.assignedTo) : null,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
@@ -85,7 +85,11 @@ class TaskService {
 
     const filters = {};
     if (projectId) filters.projectId = Number(projectId);
-    if (status) filters.status = status;
+    if (status) {
+      filters.status = {
+        in: [status, status.toLowerCase(), status.toUpperCase()]
+      };
+    }
     if (assignedTo) filters.assignedTo = Number(assignedTo);
 
     const skip = (page - 1) * limit;

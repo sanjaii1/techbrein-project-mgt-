@@ -56,7 +56,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col gap-8 min-h-screen shadow-sm">
       <div className="text-xl font-bold text-slate-900 tracking-widest flex items-center gap-2">
-        <span className="text-blue-500">Tech</span>Brein
+        <span className="text-blue-500">Project</span>Manager
       </div>
 
       <nav className="flex flex-col gap-2">
