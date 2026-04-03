@@ -3,11 +3,18 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Modal, Form, Input, Select, Button, message, Popconfirm } from "antd";
+import Pagination from "@/components/Pagination";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -20,10 +27,14 @@ export default function Users() {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (p = page) => {
     try {
-      const res = await api.get("/users");
+      setLoading(true);
+      const res = await api.get(`/users?page=${p}&limit=${limit}`);
       setUsers(res.data.data || []);
+      setPage(res.data.page || 1);
+      setTotalPages(res.data.totalPages || 1);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error(err);
       if (err.response?.status === 403) {
@@ -34,6 +45,11 @@ export default function Users() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    fetchUsers(newPage);
   };
 
   const getRoleBadge = (role) => {
@@ -73,7 +89,7 @@ export default function Users() {
         message.success("User added successfully");
       }
       setIsModalOpen(false);
-      fetchUsers();
+      fetchUsers(page);
     } catch (err) {
       message.error(err.response?.data?.message || "Failed to save user");
     } finally {
@@ -85,7 +101,7 @@ export default function Users() {
     try {
       await api.delete(`/users/${id}`);
       message.success("User deleted successfully");
-      fetchUsers();
+      fetchUsers(page);
     } catch (err) {
       message.error(err.response?.data?.message || "Failed to delete user");
     }
@@ -116,7 +132,7 @@ export default function Users() {
       <div className="flex justify-between items-center mb-10">
         <div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">User Management</h1>
-          <p className="text-slate-500">Total {users.length} registered users in the platform</p>
+          <p className="text-slate-500">Total {total} registered users in the platform</p>
         </div>
         <button 
           onClick={openAddModal}
@@ -192,6 +208,15 @@ export default function Users() {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        onPageChange={handlePageChange}
+      />
 
       <Modal
         title={<h2 className="text-xl font-bold text-slate-800">{editingUser ? "Edit User" : "Add New User"}</h2>}

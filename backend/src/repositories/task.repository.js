@@ -17,6 +17,7 @@ class TaskRepository {
       where: filters,
       skip,
       take,
+      orderBy: { id: "desc" },
       include: {
         project: true,
         user: true,

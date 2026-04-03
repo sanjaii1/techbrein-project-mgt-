@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Modal, Form, Input, Button, message, Popconfirm, Select, DatePicker } from "antd";
 import dayjs from "dayjs";
+import Pagination from "@/components/Pagination";
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
@@ -23,19 +24,26 @@ export default function Tasks() {
   const [filterStatus, setFilterStatus] = useState(undefined);
   const [filterUser, setFilterUser] = useState(undefined);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
   useEffect(() => {
     fetchSupportData();
   }, []);
 
   useEffect(() => {
-    fetchTasks();
+    setPage(1);
+    fetchTasks(1);
   }, [filterProject, filterStatus, filterUser]);
 
   const fetchSupportData = async () => {
     try {
       const [projRes, userRes] = await Promise.all([
-        api.get("/projects"),
-        api.get("/users")
+        api.get("/projects?limit=100"),
+        api.get("/users?limit=100")
       ]);
       setProjectsList(projRes.data.data || []);
       setUsersList(userRes.data.data || []);
@@ -44,21 +52,31 @@ export default function Tasks() {
     }
   };
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (p = page) => {
     try {
       setLoading(true);
       const query = new URLSearchParams();
       if (filterProject) query.append("projectId", filterProject);
       if (filterStatus) query.append("status", filterStatus);
       if (filterUser) query.append("assignedTo", filterUser);
+      query.append("page", p);
+      query.append("limit", limit);
 
       const res = await api.get(`/tasks?${query.toString()}`);
       setTasks(res.data.data || []);
+      setPage(res.data.page || 1);
+      setTotalPages(res.data.totalPages || 1);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error("Failed to fetch tasks");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    fetchTasks(newPage);
   };
 
   const getStatusColor = (status) => {
@@ -129,7 +147,7 @@ export default function Tasks() {
       
       setIsModalOpen(false);
       form.resetFields();
-      fetchTasks();
+      fetchTasks(page);
     } catch (err) {
       message.error(err.response?.data?.message || "Failed to save task");
     } finally {
@@ -211,6 +229,7 @@ export default function Tasks() {
           </button>
         </div>
       ) : (
+        <>
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -286,6 +305,16 @@ export default function Tasks() {
             </table>
           </div>
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          limit={limit}
+          onPageChange={handlePageChange}
+        />
+        </>
       )}
 
       {/* Ant Design Modal for Creating/Editing Task */}

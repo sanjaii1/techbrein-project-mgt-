@@ -1,5 +1,6 @@
 import taskRepository from "../repositories/task.repository.js";
 import prisma from "../utils/prisma.js";
+import AppError from "../utils/AppError.js";
 
 class TaskService {
   async createTask(data, currentUser) {
@@ -8,13 +9,13 @@ class TaskService {
       where: { id: Number(data.projectId) }
     });
     if (!project) {
-      throw new Error("Project not found");
+      throw new AppError("Project not found", 404);
     }
     
     // Check authorization for MANAGER role
     if (currentUser && currentUser.role === "manager") {
       if (project.managerId !== currentUser.id) {
-        throw new Error("Not authorized. You are not the manager of this project.");
+        throw new AppError("Not authorized. You are not the manager of this project.", 403);
       }
     }
 
@@ -24,7 +25,7 @@ class TaskService {
         where: { id: Number(data.assignedTo) }
       });
       if (!user) {
-        throw new Error("Assigned user not found");
+        throw new AppError("Assigned user not found", 404);
       }
     }
 
@@ -44,12 +45,12 @@ class TaskService {
       where: { id: Number(id) },
       include: { project: true }
     });
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", 404);
 
     // Check authorization for MANAGER role
     if (currentUser && currentUser.role === "manager") {
       if (task.project.managerId !== currentUser.id) {
-        throw new Error("Not authorized to update status for this project's task.");
+        throw new AppError("Not authorized to update status for this project's task.", 403);
       }
     }
 
@@ -62,26 +63,33 @@ class TaskService {
       include: { project: true }
     });
     if (!task) {
-      throw new Error("Task not found");
+      throw new AppError("Task not found", 404);
     }
 
     // Check authorization for MANAGER role
     if (currentUser && currentUser.role === "manager") {
       if (task.project.managerId !== currentUser.id) {
-        throw new Error("Not authorized. You are not the manager of this project.");
+        throw new AppError("Not authorized. You are not the manager of this project.", 403);
       }
     }
 
     const user = await prisma.user.findUnique({ where: { id: Number(assignedTo) } });
     if (!user) {
-      throw new Error("User not found");
+      throw new AppError("User not found", 404);
     }
 
     return await taskRepository.updateTask(id, { assignedTo: Number(assignedTo) });
   }
 
+  /**
+   * Paginated + filtered list of tasks.
+   * @param {{ projectId?, status?, assignedTo?, page?, limit? }} query
+   */
   async getTasks(query) {
-    const { projectId, status, assignedTo, page = 1, limit = 10 } = query;
+    const { projectId, status, assignedTo } = query;
+    const page = Math.max(1, parseInt(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
+    const skip = (page - 1) * limit;
 
     const filters = {};
     if (projectId) filters.projectId = Number(projectId);
@@ -92,16 +100,17 @@ class TaskService {
     }
     if (assignedTo) filters.assignedTo = Number(assignedTo);
 
-    const skip = (page - 1) * limit;
-    const take = Number(limit);
-
-    const tasks = await taskRepository.getTasks(filters, skip, take);
-    const total = await taskRepository.countTasks(filters);
+    const [tasks, total] = await Promise.all([
+      taskRepository.getTasks(filters, skip, limit),
+      taskRepository.countTasks(filters),
+    ]);
 
     return {
-      page: Number(page),
-      total,
       data: tasks,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -110,17 +119,17 @@ class TaskService {
       where: { id: Number(id) },
       include: { project: true }
     });
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", 404);
 
     if (currentUser && currentUser.role === "manager") {
       if (task.project.managerId !== currentUser.id) {
-        throw new Error("Not authorized to update this task.");
+        throw new AppError("Not authorized to update this task.", 403);
       }
     }
 
     if (data.assignedTo) {
       const user = await prisma.user.findUnique({ where: { id: Number(data.assignedTo) } });
-      if (!user) throw new Error("Assigned user not found");
+      if (!user) throw new AppError("Assigned user not found", 404);
     }
 
     const payload = {};
@@ -139,11 +148,11 @@ class TaskService {
       where: { id: Number(id) },
       include: { project: true }
     });
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", 404);
 
     if (currentUser && currentUser.role === "manager") {
       if (task.project.managerId !== currentUser.id) {
-        throw new Error("Not authorized to delete this task.");
+        throw new AppError("Not authorized to delete this task.", 403);
       }
     }
 

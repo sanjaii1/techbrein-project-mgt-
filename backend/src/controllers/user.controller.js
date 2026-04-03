@@ -1,7 +1,4 @@
-import "dotenv/config";
-import prisma from "../utils/prisma.js";
-import pkgBcrypt from "bcryptjs";
-const bcrypt = pkgBcrypt;
+import userService from "../services/user.service.js";
 
 /**
  * @swagger
@@ -10,11 +7,13 @@ const bcrypt = pkgBcrypt;
  *   description: User management endpoints
  */
 
+// ─── Create ──────────────────────────────────────────────────────────────────
+
 /**
  * @swagger
  * /users:
  *   post:
- *     summary: Create a newly registered user (Admin, Manager, User)
+ *     summary: Create a new user (Admin only)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -24,110 +23,94 @@ const bcrypt = pkgBcrypt;
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - role
+ *             required: [name, email, password, role]
  *             properties:
  *               name:
  *                 type: string
  *               email:
  *                 type: string
+ *                 format: email
  *               password:
  *                 type: string
+ *                 minLength: 6
  *               role:
  *                 type: string
+ *                 enum: [admin, manager, user]
  *     responses:
  *       201:
  *         description: User created
  *       400:
+ *         description: Validation error or admin uniqueness violation
+ *       409:
  *         description: Email already exists
  *       403:
  *         description: Access denied
  */
-// Create User (Admin only)
 export const createUser = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
-
-    // Check if an admin already exists when trying to create a new one
-    if (role === "admin") {
-      const existingAdmin = await prisma.user.findFirst({ where: { role: "admin" } });
-      if (existingAdmin) {
-        return res.status(400).json({
-          success: false,
-          message: "Only one admin user is allowed in the system."
-        });
-      }
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role,
-      },
-    });
-
-    res.status(201).json({
-      success: true,
-      data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+    const user = await userService.createUser(req.body);
+    res.status(201).json({ success: true, data: user });
   } catch (error) {
-    if (error.code === "P2002") {
-      return res.status(400).json({
-        success: false,
-        message: "Email already exists",
-      });
-    }
     next(error);
   }
 };
+
+// ─── Read (paginated) ─────────────────────────────────────────────────────────
 
 /**
  * @swagger
  * /users:
  *   get:
- *     summary: Get all users (Admin only)
+ *     summary: Get all users with pagination (Admin only)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Items per page (max 100)
  *     responses:
  *       200:
- *         description: List of users
+ *         description: Paginated list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
  *       403:
  *         description: Access denied
  */
-// List Users (Admin only)
 export const getUsers = async (req, res, next) => {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
-
-    res.json({
-      success: true,
-      count: users.length,
-      data: users,
-    });
+    const result = await userService.getUsers(req.query);
+    res.status(200).json({ success: true, ...result });
   } catch (error) {
     next(error);
   }
 };
+
+// ─── Update ──────────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -160,73 +143,21 @@ export const getUsers = async (req, res, next) => {
  *     responses:
  *       200:
  *         description: User updated
- *       403:
- *         description: Access denied
+ *       404:
+ *         description: User not found
+ *       409:
+ *         description: Email already exists
  */
 export const updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { name, email, role, password } = req.body;
-
-    const userToUpdate = await prisma.user.findUnique({ where: { id: parseInt(id) } });
-    if (!userToUpdate) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    // If updating the admin user, ONLY allow name change
-    if (userToUpdate.role === "admin") {
-      const updatedUser = await prisma.user.update({
-        where: { id: parseInt(id) },
-        data: { name: name || userToUpdate.name }
-      });
-      return res.json({
-        success: true,
-        data: {
-          id: updatedUser.id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          role: updatedUser.role,
-        },
-      });
-    }
-
-    // If changing a standard user to an admin, ensure an admin doesn't already exist
-    if (role === "admin" && userToUpdate.role !== "admin") {
-      const existingAdmin = await prisma.user.findFirst({ where: { role: "admin" } });
-      if (existingAdmin) {
-        return res.status(400).json({
-          success: false,
-          message: "Only one admin user is allowed in the system."
-        });
-      }
-    }
-
-    const data = { name, email, role };
-    if (password) {
-      data.password = await bcrypt.hash(password, 10);
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
-      data
-    });
-
-    res.json({
-      success: true,
-      data: {
-        id: updatedUser.id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-      },
-    });
+    const user = await userService.updateUser(req.params.id, req.body);
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
-    if (error.code === "P2002") {
-      return res.status(400).json({ success: false, message: "Email already exists" });
-    }
     next(error);
   }
 };
+
+// ─── Delete ──────────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -243,32 +174,17 @@ export const updateUser = async (req, res, next) => {
  *         schema:
  *           type: integer
  *     responses:
- *       200:
- *         description: User deleted
+ *       204:
+ *         description: User deleted (no content)
  *       403:
  *         description: Cannot delete admin
+ *       404:
+ *         description: User not found
  */
 export const deleteUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    const userToDel = await prisma.user.findUnique({ where: { id: parseInt(id) } });
-    if (!userToDel) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-    
-    if (userToDel.role === "admin") {
-      return res.status(403).json({ success: false, message: "Cannot delete an admin profile" });
-    }
-
-    await prisma.user.delete({
-      where: { id: parseInt(id) }
-    });
-
-    res.json({
-      success: true,
-      message: "User deleted successfully"
-    });
+    await userService.deleteUser(req.params.id);
+    res.status(204).send(); // 204 No Content is the correct status for successful DELETE
   } catch (error) {
     next(error);
   }

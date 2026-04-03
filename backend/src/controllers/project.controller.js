@@ -57,21 +57,34 @@ export const createProject = async (req, res, next) => {
  * @swagger
  * /projects:
  *   get:
- *     summary: Get all projects
+ *     summary: Get all projects (paginated)
  *     tags: [Projects]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page (max 100)
  *     responses:
  *       200:
- *         description: List of all projects
+ *         description: Paginated list of projects
  */
 export const getProjects = async (req, res, next) => {
   try {
-    const projects = await projectService.getProjects();
+    const result = await projectService.getProjects(req.query);
 
-    res.json({
+    res.status(200).json({
       success: true,
-      data: projects,
+      ...result,
     });
   } catch (error) {
     next(error);
@@ -119,7 +132,7 @@ export const updateProject = async (req, res, next) => {
 
     const project = await projectService.updateProject(id, dataToUpdate);
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: project,
     });
@@ -143,26 +156,15 @@ export const updateProject = async (req, res, next) => {
  *         schema:
  *           type: integer
  *     responses:
- *       200:
+ *       204:
  *         description: Project deleted
  */
 export const deleteProject = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     await projectService.deleteProject(id);
-
-    res.json({
-      success: true,
-      message: "Project deleted",
-    });
+    res.status(204).send();
   } catch (error) {
-    if (error.code === "P2003" && error.message.includes("Task_projectId_fkey")) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete this project because it contains active tasks. Please delete or reassign the tasks first.",
-      });
-    }
     next(error);
   }
 };

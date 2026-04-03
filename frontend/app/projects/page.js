@@ -3,10 +3,17 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Modal, Form, Input, Button, message, Popconfirm, Select } from "antd";
+import Pagination from "@/components/Pagination";
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -23,22 +30,31 @@ export default function Projects() {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get("/users");
+      const res = await api.get("/users?limit=100");
       setUsers(res.data.data || []);
     } catch(err) {
       console.error(err);
     }
   };
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (p = page) => {
     try {
-      const res = await api.get("/projects");
+      setLoading(true);
+      const res = await api.get(`/projects?page=${p}&limit=${limit}`);
       setProjects(res.data.data || []);
+      setPage(res.data.page || 1);
+      setTotalPages(res.data.totalPages || 1);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error("Failed to fetch projects");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    fetchProjects(newPage);
   };
 
   const openAddModal = () => {
@@ -88,7 +104,7 @@ export default function Projects() {
       
       setIsModalOpen(false);
       form.resetFields();
-      fetchProjects();
+      fetchProjects(page);
     } catch (err) {
       message.error(err.response?.data?.message || "Failed to save project");
     } finally {
@@ -110,7 +126,7 @@ export default function Projects() {
       <div className="flex justify-between items-center mb-10">
         <div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">My Projects</h1>
-          <p className="text-slate-500">Total {projects.length} active projects</p>
+          <p className="text-slate-500">Total {total} active projects</p>
         </div>
         <button 
           onClick={openAddModal}
@@ -135,6 +151,7 @@ export default function Projects() {
           </button>
         </div>
       ) : (
+        <>
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -211,6 +228,16 @@ export default function Projects() {
             </table>
           </div>
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          limit={limit}
+          onPageChange={handlePageChange}
+        />
+        </>
       )}
 
       {/* Ant Design Modal for Creating/Editing Project */}

@@ -23,12 +23,14 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const [projectsRes, tasksRes] = await Promise.all([
-        api.get("/projects"),
-        api.get("/tasks?page=1&limit=50")
+        api.get("/projects?page=1&limit=100"),
+        api.get("/tasks?page=1&limit=100")
       ]);
 
       const projects = projectsRes.data.data || [];
       const tasks = tasksRes.data.data || [];
+      const totalProjects = projectsRes.data.total ?? projects.length;
+      const totalTasks = tasksRes.data.total ?? tasks.length;
 
       // Calculate stats
       const completedTasks = tasks.filter(t => {
@@ -37,15 +39,15 @@ export default function Dashboard() {
       }).length;
       
       setStats({
-        totalProjects: projects.length,
-        totalTasks: tasks.length,
+        totalProjects,
+        totalTasks,
         completedTasks,
-        activeTasks: tasks.length - completedTasks
+        activeTasks: totalTasks - completedTasks
       });
 
       // Show latest 5 projects & tasks
-      setRecentProjects(projects.slice(-5).reverse());
-      setRecentTasks(tasks.slice(-6).reverse());
+      setRecentProjects(projects.slice(0, 5));
+      setRecentTasks(projects.length > 0 ? tasks.slice(0, 6) : []);
 
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);

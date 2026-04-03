@@ -1,5 +1,6 @@
 import projectRepository from "../repositories/project.repository.js";
 import prisma from "../utils/prisma.js";
+import AppError from "../utils/AppError.js";
 
 class ProjectService {
   async promoteToManagerIfNeeded(managerId) {
@@ -16,37 +17,87 @@ class ProjectService {
   async createProject(data) {
     if (data.managerId) {
       const user = await prisma.user.findUnique({ where: { id: Number(data.managerId) } });
-      if (!user) throw new Error("Manager user not found");
+      if (!user) throw new AppError("Manager user not found", 404);
     }
 
-    const project = await projectRepository.createProject(data);
-    await this.promoteToManagerIfNeeded(data.managerId);
+    // Use transaction: create project + promote manager atomically
+    const project = await prisma.$transaction(async (tx) => {
+      const created = await tx.project.create({ data });
+
+      if (data.managerId) {
+        const user = await tx.user.findUnique({ where: { id: Number(data.managerId) } });
+        if (user && user.role === "user") {
+          await tx.user.update({
+            where: { id: Number(data.managerId) },
+            data: { role: "manager" },
+          });
+        }
+      }
+
+      return created;
+    });
+
     return project;
   }
 
-  async getProjects() {
-    return await projectRepository.getProjects();
+  /**
+   * Paginated list of projects.
+   * @param {{ page?: number, limit?: number }} query
+   */
+  async getProjects(query = {}) {
+    const page = Math.max(1, parseInt(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    const [projects, total] = await Promise.all([
+      projectRepository.getProjects({}, skip, limit),
+      projectRepository.countProjects({}),
+    ]);
+
+    return {
+      data: projects,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async updateProject(id, data) {
-    const existingProject = await prisma.project.findUnique({ where: { id: Number(id) } });
-    if (!existingProject) throw new Error("Project not found");
+    const existingProject = await projectRepository.findById(id);
+    if (!existingProject) throw new AppError("Project not found", 404);
 
     if (data.managerId) {
       const user = await prisma.user.findUnique({ where: { id: Number(data.managerId) } });
-      if (!user) throw new Error("Manager user not found");
+      if (!user) throw new AppError("Manager user not found", 404);
     }
 
-    const project = await projectRepository.updateProject(id, data);
-    if (data.managerId !== undefined) {
-      await this.promoteToManagerIfNeeded(data.managerId);
-    }
+    // Use transaction: update project + promote manager atomically
+    const project = await prisma.$transaction(async (tx) => {
+      const updated = await tx.project.update({
+        where: { id: Number(id) },
+        data,
+      });
+
+      if (data.managerId !== undefined && data.managerId) {
+        const user = await tx.user.findUnique({ where: { id: Number(data.managerId) } });
+        if (user && user.role === "user") {
+          await tx.user.update({
+            where: { id: Number(data.managerId) },
+            data: { role: "manager" },
+          });
+        }
+      }
+
+      return updated;
+    });
+
     return project;
   }
 
   async deleteProject(id) {
-    const existingProject = await prisma.project.findUnique({ where: { id: Number(id) } });
-    if (!existingProject) throw new Error("Project not found");
+    const existingProject = await projectRepository.findById(id);
+    if (!existingProject) throw new AppError("Project not found", 404);
     return await projectRepository.deleteProject(id);
   }
 }
