@@ -317,7 +317,7 @@ export default function Projects() {
                     <div key={t.id} className="p-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-blue-300 transition-colors">
                       <div className="flex justify-between items-start mb-1">
                         <h4 className="font-semibold text-slate-800 text-sm truncate pr-2">{t.title}</h4>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${['done', 'completed'].includes(t.status?.toLowerCase()) ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                           {t.status}
                         </span>
                       </div>
@@ -389,7 +389,7 @@ export default function Projects() {
                     <div key={t.id} className="p-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-blue-300 transition-colors">
                       <div className="flex justify-between items-start mb-1">
                         <h4 className="font-semibold text-slate-800 text-sm truncate pr-2">{t.title}</h4>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${['done', 'completed'].includes(t.status?.toLowerCase()) ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                           {t.status}
                         </span>
                       </div>

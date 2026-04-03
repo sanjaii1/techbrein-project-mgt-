@@ -96,8 +96,8 @@ export const createTaskRules = [
     field: "status",
     message: `Status must be one of: ${VALID_STATUSES.join(", ")}`,
     validator: (v, body) => {
-      if (!body.status) return true; // optional — defaults to "todo"
-      return VALID_STATUSES.includes(v);
+      if (!v) return true; // optional — defaults to "todo"
+      return VALID_STATUSES.includes(v.toLowerCase());
     },
   },
   {
@@ -114,7 +114,7 @@ export const updateTaskStatusRules = [
   {
     field: "status",
     message: `Status must be one of: ${VALID_STATUSES.join(", ")}`,
-    validator: (v) => VALID_STATUSES.includes(v),
+    validator: (v) => v && VALID_STATUSES.includes(v.toLowerCase()),
   },
 ];
 

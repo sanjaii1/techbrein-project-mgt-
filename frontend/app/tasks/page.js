@@ -80,10 +80,10 @@ export default function Tasks() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "TODO": return "bg-slate-100 text-slate-700 border border-slate-200";
-      case "IN_PROGRESS": return "bg-amber-100 text-amber-700 border border-amber-200";
-      case "DONE": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
+    switch (status?.toLowerCase()) {
+      case "todo": return "bg-slate-100 text-slate-700 border border-slate-200";
+      case "in_progress": return "bg-amber-100 text-amber-700 border border-amber-200";
+      case "done": return "bg-emerald-100 text-emerald-700 border border-emerald-200";
       default: return "bg-slate-100 text-slate-700 border border-slate-200";
     }
   };
@@ -92,7 +92,7 @@ export default function Tasks() {
     setEditingTask(null);
     form.resetFields();
     // Default to TODO
-    form.setFieldsValue({ status: "TODO" });
+    form.setFieldsValue({ status: "todo" });
     setIsModalOpen(true);
   };
 
@@ -195,9 +195,9 @@ export default function Tasks() {
           value={filterStatus} 
           onChange={setFilterStatus}
         >
-          <Select.Option value="TODO">To Do</Select.Option>
-          <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
-          <Select.Option value="DONE">Done</Select.Option>
+          <Select.Option value="todo">To Do</Select.Option>
+          <Select.Option value="in_progress">In Progress</Select.Option>
+          <Select.Option value="done">Done</Select.Option>
         </Select>
 
         <Select 
@@ -369,9 +369,9 @@ export default function Tasks() {
                rules={[{ required: true }]}
              >
                <Select size="large" className="rounded-lg">
-                 <Select.Option value="TODO">To Do</Select.Option>
-                 <Select.Option value="IN_PROGRESS">In Progress</Select.Option>
-                 <Select.Option value="DONE">Done</Select.Option>
+                 <Select.Option value="todo">To Do</Select.Option>
+                 <Select.Option value="in_progress">In Progress</Select.Option>
+                 <Select.Option value="done">Done</Select.Option>
                </Select>
              </Form.Item>
           </div>
@@ -439,7 +439,7 @@ export default function Tasks() {
                  <div className="text-lg font-medium text-slate-800">{viewingTask.title}</div>
                </div>
                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusColor(viewingTask.status)}`}>
-                 {viewingTask.status || "TODO"}
+                 {viewingTask.status || "todo"}
                </span>
             </div>
             
