@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Modal, Form, Input, Select, Button, message, Popconfirm } from "antd";
+import { message } from "antd";
 import Pagination from "@/components/Pagination";
+import UsersHeader from "./components/UsersHeader";
+import UsersTable from "./components/UsersTable";
+import UserFormModal from "./components/UserFormModal";
+
+
+
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -129,85 +135,14 @@ export default function Users() {
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
-      <div className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">User Management</h1>
-          <p className="text-slate-500">Total {total} registered users in the platform</p>
-        </div>
-        <button 
-          onClick={openAddModal}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/10 active:scale-95 transition-all">
-          Add User
-        </button>
-      </div>
+      <UsersHeader total={total} openAddModal={openAddModal} />
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm uppercase tracking-wider">
-                <th className="py-4 px-6 font-semibold">User</th>
-                <th className="py-4 px-6 font-semibold">Role</th>
-                <th className="py-4 px-6 font-semibold text-center">ID</th>
-                <th className="py-4 px-6 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full flex justify-center items-center text-white font-bold shadow-md">
-                        {user.name?.[0]?.toUpperCase() || "?"}
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900">{user.name}</div>
-                        <div className="text-sm text-slate-500">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className={`px-3 py-1 font-bold text-xs uppercase tracking-wider rounded-full ${getRoleBadge(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <span className="text-slate-500 font-medium">#{user.id}</span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <div className="flex justify-end gap-3">
-                      <button 
-                        onClick={() => openEditModal(user)}
-                        className="text-slate-400 hover:text-blue-600 transition-all font-semibold text-sm">
-                        Edit
-                      </button>
-                      
-                      {user.role?.toLowerCase() === "admin" ? (
-                        <button disabled className="text-slate-300 cursor-not-allowed font-semibold text-sm">
-                          Delete
-                        </button>
-                      ) : (
-                        <Popconfirm
-                          title="Delete User"
-                          description={`Are you sure you want to delete ${user.name}?`}
-                          onConfirm={() => handleDelete(user.id)}
-                          okText="Yes, delete"
-                          cancelText="Cancel"
-                          okButtonProps={{ danger: true }}
-                        >
-                          <button className="text-slate-400 hover:text-red-500 transition-all font-semibold text-sm">
-                            Delete
-                          </button>
-                        </Popconfirm>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <UsersTable 
+        users={users}
+        getRoleBadge={getRoleBadge}
+        openEditModal={openEditModal}
+        handleDelete={handleDelete}
+      />
 
       {/* Pagination */}
       <Pagination
@@ -218,81 +153,16 @@ export default function Users() {
         onPageChange={handlePageChange}
       />
 
-      <Modal
-        title={<h2 className="text-xl font-bold text-slate-800">{editingUser ? "Edit User" : "Add New User"}</h2>}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        centered
-        styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          className="mt-6"
-        >
-          <Form.Item
-            label="Full Name"
-            name="name"
-            rules={[{ required: true, message: "Please enter a name" }]}
-          >
-            <Input placeholder="John Doe" size="large" className="rounded-lg" />
-          </Form.Item>
-
-          <Form.Item
-            label="Email Address"
-            name="email"
-            rules={[
-              { required: true, message: "Please enter an email" },
-              { type: 'email', message: "Please enter a valid email" }
-            ]}
-          >
-            <Input type="email" disabled={editingUser?.role === "admin"} placeholder="john@company.com" size="large" className="rounded-lg" />
-          </Form.Item>
-
-          <Form.Item
-            label={editingUser ? "Password (Leave blank to keep unchanged)" : "Password"}
-            name="password"
-            rules={editingUser ? [] : [{ required: true, message: "Please enter a password" }]}
-          >
-            <Input.Password disabled={editingUser?.role === "admin"} placeholder="••••••••" size="large" className="rounded-lg" />
-          </Form.Item>
-
-          <Form.Item
-            label="Role"
-            name="role"
-            rules={[{ required: true, message: "Please select a role" }]}
-          >
-            <Select disabled={editingUser?.role?.toLowerCase() === "admin"} size="large" className="rounded-lg">
-              <Select.Option value="user">User</Select.Option>
-              <Select.Option value="manager">Manager</Select.Option>
-              <Select.Option 
-                value="admin" 
-                disabled={adminExists && editingUser?.role?.toLowerCase() !== "admin"}
-              >
-                Admin (Max 1 Allowed)
-              </Select.Option>
-            </Select>
-          </Form.Item>
-
-          <div className="flex justify-end gap-3 mt-8">
-            <Button size="large" onClick={() => setIsModalOpen(false)} className="rounded-lg font-medium hover:bg-slate-50">
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              loading={submitting}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 font-semibold"
-            >
-              {editingUser ? "Save Changes" : "Create User"}
-            </Button>
-          </div>
-        </Form>
-      </Modal>
+      <UserFormModal 
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        editingUser={editingUser}
+        form={form}
+        handleSubmit={handleSubmit}
+        submitting={submitting}
+        adminExists={adminExists}
+      />
     </div>
   );
 }
+
