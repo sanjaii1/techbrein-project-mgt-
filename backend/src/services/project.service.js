@@ -44,14 +44,24 @@ class ProjectService {
    * Paginated list of projects.
    * @param {{ page?: number, limit?: number }} query
    */
-  async getProjects(query = {}) {
+  async getProjects(query = {}, currentUser = null) {
     const page = Math.max(1, parseInt(query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
     const skip = (page - 1) * limit;
 
+    const filters = {};
+    // Filter for non-admin users
+    if (currentUser && currentUser.role !== 'admin') {
+      filters.OR = [
+        { createdBy: currentUser.id },
+        { managerId: currentUser.id },
+        { tasks: { some: { assignedTo: currentUser.id } } }
+      ];
+    }
+
     const [projects, total] = await Promise.all([
-      projectRepository.getProjects({}, skip, limit),
-      projectRepository.countProjects({}),
+      projectRepository.getProjects(filters, skip, limit),
+      projectRepository.countProjects(filters),
     ]);
 
     return {

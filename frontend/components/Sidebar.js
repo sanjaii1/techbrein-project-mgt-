@@ -43,11 +43,12 @@ export default function Sidebar() {
     }
   }, []);
 
-  const links = [
-    { href: "/dashboard", label: "Dashboard", icon: "📊" },
-    { href: "/projects", label: "Projects", icon: "📁" },
-    { href: "/tasks", label: "Tasks", icon: "✅" },
-  ];
+  const links = [];
+  if (isAdmin) {
+    links.push({ href: "/dashboard", label: "Dashboard", icon: "📊" });
+  }
+  links.push({ href: "/projects", label: "Projects", icon: "📁" });
+  links.push({ href: "/tasks", label: "Tasks", icon: "✅" });
 
   if (isAdmin) {
     links.push({ href: "/users", label: "Users", icon: "👥" });

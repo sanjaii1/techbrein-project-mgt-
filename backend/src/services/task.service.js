@@ -85,7 +85,7 @@ class TaskService {
    * Paginated + filtered list of tasks.
    * @param {{ projectId?, status?, assignedTo?, page?, limit? }} query
    */
-  async getTasks(query) {
+  async getTasks(query, currentUser = null) {
     const { projectId, status, assignedTo } = query;
     const page = Math.max(1, parseInt(query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 10));
@@ -98,7 +98,17 @@ class TaskService {
         in: [status, status.toLowerCase(), status.toUpperCase()]
       };
     }
-    if (assignedTo) filters.assignedTo = Number(assignedTo);
+
+    // Role-based filtering
+    if (currentUser && currentUser.role !== 'admin') {
+      filters.OR = [
+        { assignedTo: currentUser.id },
+        { project: { managerId: Number(currentUser.id) } },
+        { project: { createdBy: Number(currentUser.id) } }
+      ];
+    } else if (assignedTo) {
+      filters.assignedTo = Number(assignedTo);
+    }
 
     const [tasks, total] = await Promise.all([
       taskRepository.getTasks(filters, skip, limit),

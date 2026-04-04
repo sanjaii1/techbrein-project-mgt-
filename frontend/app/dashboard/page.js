@@ -20,6 +20,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.role !== 'admin') {
+        window.location.href = "/tasks";
+        return;
+      }
+    } catch (e) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      return;
+    }
+
     fetchDashboardData();
   }, []);
 
