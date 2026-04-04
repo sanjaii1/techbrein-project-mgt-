@@ -11,6 +11,21 @@ const ProjectFormModal = ({
   users, 
   submitting 
 }) => {
+
+  React.useEffect(() => {
+    if (isModalOpen) {
+      if (editingProject) {
+        form.setFieldsValue({
+          name: editingProject.name,
+          description: editingProject.description,
+          managerId: editingProject.managerId,
+        });
+      } else {
+        form.resetFields();
+      }
+    }
+  }, [isModalOpen, editingProject, form]);
+
   return (
     <Modal
       title={<h2 className="text-xl font-bold text-slate-800">{editingProject ? "Edit Project" : "Create New Project"}</h2>}
@@ -19,7 +34,6 @@ const ProjectFormModal = ({
       footer={null}
       centered
       styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
-      destroyOnClose
     >
       <Form
         form={form}

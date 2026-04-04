@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { message } from "antd";
+import { message, Form } from "antd";
 import dayjs from "dayjs";
 import Pagination from "@/components/Pagination";
 import TasksHeader from "./components/TasksHeader";
@@ -101,22 +101,11 @@ export default function Tasks() {
 
   const openAddModal = () => {
     setEditingTask(null);
-    form.resetFields();
-    // Default to TODO
-    form.setFieldsValue({ status: "todo" });
     setIsModalOpen(true);
   };
 
   const openEditModal = (t) => {
     setEditingTask(t);
-    form.setFieldsValue({
-      title: t.title,
-      description: t.description,
-      projectId: t.projectId,
-      status: t.status || "TODO",
-      assignedTo: t.assignedTo,
-      dueDate: t.dueDate ? dayjs(t.dueDate) : null,
-    });
     setIsModalOpen(true);
   };
 

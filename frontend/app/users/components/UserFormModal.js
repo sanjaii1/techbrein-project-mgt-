@@ -10,6 +10,22 @@ const UserFormModal = ({
   submitting,
   adminExists
 }) => {
+
+  React.useEffect(() => {
+    if (isModalOpen) {
+      if (editingUser) {
+        form.setFieldsValue({
+          name: editingUser.name,
+          email: editingUser.email,
+          role: editingUser.role,
+        });
+      } else {
+        form.resetFields();
+        form.setFieldsValue({ role: "user" });
+      }
+    }
+  }, [isModalOpen, editingUser, form]);
+
   return (
     <Modal
       title={<h2 className="text-xl font-bold text-slate-800">{editingUser ? "Edit User" : "Add New User"}</h2>}
@@ -18,7 +34,6 @@ const UserFormModal = ({
       footer={null}
       centered
       styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
-      destroyOnClose
     >
       <Form
         form={form}

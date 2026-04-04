@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { message } from "antd";
+import { message, Form } from "antd";
 import Pagination from "@/components/Pagination";
 import UsersHeader from "./components/UsersHeader";
 import UsersTable from "./components/UsersTable";
@@ -68,19 +68,11 @@ export default function Users() {
 
   const openAddModal = () => {
     setEditingUser(null);
-    form.resetFields();
-    form.setFieldsValue({ role: "user" });
     setIsModalOpen(true);
   };
 
   const openEditModal = (user) => {
     setEditingUser(user);
-    form.resetFields();
-    form.setFieldsValue({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
     setIsModalOpen(true);
   };
 

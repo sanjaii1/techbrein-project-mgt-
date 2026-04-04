@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Form, Input, Button, Select, DatePicker } from "antd";
+import dayjs from "dayjs";
 
 const TaskFormModal = ({ 
   isModalOpen, 
@@ -11,6 +12,25 @@ const TaskFormModal = ({
   usersList, 
   submitting 
 }) => {
+
+  React.useEffect(() => {
+    if (isModalOpen) {
+      if (editingTask) {
+        form.setFieldsValue({
+          title: editingTask.title,
+          description: editingTask.description,
+          projectId: editingTask.projectId,
+          status: editingTask.status || "todo",
+          assignedTo: editingTask.assignedTo,
+          dueDate: editingTask.dueDate ? dayjs(editingTask.dueDate) : null,
+        });
+      } else {
+        form.resetFields();
+        form.setFieldsValue({ status: "todo" });
+      }
+    }
+  }, [isModalOpen, editingTask, form]);
+
   return (
     <Modal
       title={<h2 className="text-xl font-bold text-slate-800">{editingTask ? "Edit Task" : "Create New Task"}</h2>}
@@ -19,7 +39,6 @@ const TaskFormModal = ({
       footer={null}
       centered
       styles={{ body: { overflowY: 'auto', maxHeight: 'calc(100vh - 200px)', paddingRight: '8px' } }}
-      destroyOnClose
     >
       <Form
         form={form}

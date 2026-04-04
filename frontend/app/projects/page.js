@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { message } from "antd";
+import { message, Form } from "antd";
 import Pagination from "@/components/Pagination";
 import ProjectsHeader from "./components/ProjectsHeader";
 import NoProjects from "./components/NoProjects";
@@ -67,17 +67,11 @@ export default function Projects() {
 
   const openAddModal = () => {
     setEditingProject(null);
-    form.resetFields();
     setIsModalOpen(true);
   };
 
   const openEditModal = (p) => {
     setEditingProject(p);
-    form.setFieldsValue({
-      name: p.name,
-      description: p.description,
-      managerId: p.managerId,
-    });
     setIsModalOpen(true);
   };
 
