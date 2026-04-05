@@ -1,24 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import api from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const router = useRouter();
+  const { login, loading, error } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    try {
-      const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      router.push("/dashboard");
-    } catch (err) {
-      setError("Invalid email or password");
-    }
+    await login(email, password);
   };
 
   return (

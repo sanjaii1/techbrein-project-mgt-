@@ -4,9 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/hooks/useAuth";
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { logout } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -25,23 +28,20 @@ export default function Sidebar() {
         if (payload.exp) {
           const timeoutMs = (payload.exp * 1000) - Date.now();
           if (timeoutMs <= 0) {
-            localStorage.removeItem("token");
-            window.location.href = "/login";
+            logout();
           } else {
             const timeoutId = setTimeout(() => {
-              localStorage.removeItem("token");
-              window.location.href = "/login";
+              logout();
             }, timeoutMs);
             return () => clearTimeout(timeoutId);
           }
         }
       } catch (e) {
         console.error("Token parsing error", e);
-        localStorage.removeItem("token");
-        window.location.href = "/login";
+        logout();
       }
     }
-  }, []);
+  }, [logout]);
 
   const links = [];
   if (isAdmin) {
@@ -82,10 +82,7 @@ export default function Sidebar() {
 
       <div className="mt-auto pt-6 border-t border-slate-200">
         <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            window.location.href = "/login";
-          }}
+          onClick={logout}
           className="flex items-center gap-3 px-4 py-3 w-full text-left text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

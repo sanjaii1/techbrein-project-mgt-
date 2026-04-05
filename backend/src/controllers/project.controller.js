@@ -80,6 +80,7 @@ export const createProject = async (req, res, next) => {
  */
 export const getProjects = async (req, res, next) => {
   try {
+    console.log("Fetching projects for user:", req.user?.id, "with query:", req.query);
     const result = await projectService.getProjects(req.query, req.user);
 
     res.status(200).json({

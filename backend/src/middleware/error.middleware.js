@@ -44,9 +44,12 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   // ── Unknown / programmer errors ──
-  console.error("UNHANDLED ERROR:", err);
+  console.error("UNHANDLED ERROR at URL:", req.originalUrl);
+  console.error(err);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
+    error: err.message,
+    stack: err.stack,
   });
 };

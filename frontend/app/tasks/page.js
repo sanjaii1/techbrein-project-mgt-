@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api";
 import { message, Form } from "antd";
 import dayjs from "dayjs";
 import Pagination from "@/components/Pagination";
@@ -17,9 +16,23 @@ import TaskViewModal from "./components/TaskViewModal";
 
 
 
+import { useTasks } from "@/hooks/useTasks";
+import { useProjects } from "@/hooks/useProjects";
+import { useUsers } from "@/hooks/useUsers";
+
 export default function Tasks() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    tasks, 
+    loading, 
+    pagination, 
+    fetchTasks, 
+    addTask, 
+    updateTask, 
+    deleteTask 
+  } = useTasks();
+  
+  const { projects: projectsList, fetchProjects } = useProjects();
+  const { users: usersList, fetchUsers } = useUsers();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -27,67 +40,35 @@ export default function Tasks() {
 
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [projectsList, setProjectsList] = useState([]);
-  const [usersList, setUsersList] = useState([]);
 
   // Active filters
   const [filterProject, setFilterProject] = useState(undefined);
   const [filterStatus, setFilterStatus] = useState(undefined);
   const [filterUser, setFilterUser] = useState(undefined);
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+  useEffect(() => {
+    fetchProjects(1, 100);
+    fetchUsers(1, 100);
+  }, [fetchProjects, fetchUsers]);
 
   useEffect(() => {
-    fetchSupportData();
-  }, []);
-
-  useEffect(() => {
-    setPage(1);
-    fetchTasks(1);
-  }, [filterProject, filterStatus, filterUser]);
-
-  const fetchSupportData = async () => {
-    try {
-      const [projRes, userRes] = await Promise.all([
-        api.get("/projects?limit=100"),
-        api.get("/users?limit=100")
-      ]);
-      setProjectsList(projRes.data.data || []);
-      setUsersList(userRes.data.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchTasks = async (p = page) => {
-    try {
-      setLoading(true);
-      const query = new URLSearchParams();
-      if (filterProject) query.append("projectId", filterProject);
-      if (filterStatus) query.append("status", filterStatus);
-      if (filterUser) query.append("assignedTo", filterUser);
-      query.append("page", p);
-      query.append("limit", limit);
-
-      const res = await api.get(`/tasks?${query.toString()}`);
-      setTasks(res.data.data || []);
-      setPage(res.data.page || 1);
-      setTotalPages(res.data.totalPages || 1);
-      setTotal(res.data.total || 0);
-    } catch (err) {
-      console.error("Failed to fetch tasks");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchTasks({
+      page: 1,
+      limit: 10,
+      projectId: filterProject,
+      status: filterStatus,
+      assignedTo: filterUser
+    });
+  }, [filterProject, filterStatus, filterUser, fetchTasks]);
 
   const handlePageChange = (newPage) => {
-    setPage(newPage);
-    fetchTasks(newPage);
+    fetchTasks({
+      page: newPage,
+      limit: pagination.limit,
+      projectId: filterProject,
+      status: filterStatus,
+      assignedTo: filterUser
+    });
   };
 
   const getStatusColor = (status) => {
@@ -110,49 +91,52 @@ export default function Tasks() {
   };
 
   const handleDeleteTask = async (id) => {
-    try {
-      await api.delete(`/tasks/${id}`);
-      message.success("Task deleted successfully");
-      fetchTasks();
-    } catch (err) {
-      message.error(err.response?.data?.message || "Failed to delete task");
-    }
+    await deleteTask(id);
+    fetchTasks({
+      page: pagination.page,
+      limit: pagination.limit,
+      projectId: filterProject,
+      status: filterStatus,
+      assignedTo: filterUser
+    });
   };
 
   const handleSubmit = async (values) => {
     setSubmitting(true);
-    try {
-      const payload = {
-        title: values.title,
-        description: values.description,
-        projectId: Number(values.projectId),
-        status: values.status,
-      };
-      
-      if (values.assignedTo !== undefined && values.assignedTo !== "" && values.assignedTo !== null) {
-        payload.assignedTo = Number(values.assignedTo);
-      }
-      
-      if (values.dueDate) {
-        payload.dueDate = values.dueDate.toISOString();
-      }
-      
-      if (editingTask) {
-        await api.put(`/tasks/${editingTask.id}`, payload);
-        message.success("Task updated successfully!");
-      } else {
-        await api.post("/tasks", payload);
-        message.success("Task created successfully!");
-      }
-      
+    const payload = {
+      title: values.title,
+      description: values.description,
+      projectId: Number(values.projectId),
+      status: values.status,
+    };
+    
+    if (values.assignedTo !== undefined && values.assignedTo !== "" && values.assignedTo !== null) {
+      payload.assignedTo = Number(values.assignedTo);
+    }
+    
+    if (values.dueDate) {
+      payload.dueDate = values.dueDate.toISOString();
+    }
+    
+    let success;
+    if (editingTask) {
+      success = await updateTask(editingTask.id, payload);
+    } else {
+      success = await addTask(payload);
+    }
+    
+    if (success) {
       setIsModalOpen(false);
       form.resetFields();
-      fetchTasks(page);
-    } catch (err) {
-      message.error(err.response?.data?.message || "Failed to save task");
-    } finally {
-      setSubmitting(false);
+      fetchTasks({
+        page: pagination.page,
+        limit: pagination.limit,
+        projectId: filterProject,
+        status: filterStatus,
+        assignedTo: filterUser
+      });
     }
+    setSubmitting(false);
   };
 
   return (
@@ -188,10 +172,10 @@ export default function Tasks() {
 
         {/* Pagination */}
         <Pagination
-          page={page}
-          totalPages={totalPages}
-          total={total}
-          limit={limit}
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={pagination.limit}
           onPageChange={handlePageChange}
         />
         </>

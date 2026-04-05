@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api";
 import { message, Form } from "antd";
 import Pagination from "@/components/Pagination";
 import ProjectsHeader from "./components/ProjectsHeader";
@@ -13,15 +12,21 @@ import ProjectViewModal from "./components/ProjectViewModal";
 
 
 
-export default function Projects() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+import { useProjects } from "@/hooks/useProjects";
+import { useUsers } from "@/hooks/useUsers";
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 10;
+export default function Projects() {
+  const { 
+    projects, 
+    loading, 
+    pagination, 
+    fetchProjects, 
+    addProject, 
+    updateProject, 
+    deleteProject 
+  } = useProjects();
+  
+  const { users, fetchUsers } = useUsers();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -29,40 +34,14 @@ export default function Projects() {
 
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetchProjects();
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await api.get("/users?limit=100");
-      setUsers(res.data.data || []);
-    } catch(err) {
-      console.error(err);
-    }
-  };
-
-  const fetchProjects = async (p = page) => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/projects?page=${p}&limit=${limit}`);
-      setProjects(res.data.data || []);
-      setPage(res.data.page || 1);
-      setTotalPages(res.data.totalPages || 1);
-      setTotal(res.data.total || 0);
-    } catch (err) {
-      console.error("Failed to fetch projects");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchProjects(1, 10);
+    fetchUsers(1, 100);
+  }, [fetchProjects, fetchUsers]);
 
   const handlePageChange = (newPage) => {
-    setPage(newPage);
-    fetchProjects(newPage);
+    fetchProjects(newPage, pagination.limit);
   };
 
   const openAddModal = () => {
@@ -76,42 +55,31 @@ export default function Projects() {
   };
 
   const handleDeleteProject = async (id) => {
-    try {
-      await api.delete(`/projects/${id}`);
-      message.success("Project deleted successfully");
-      fetchProjects();
-    } catch (err) {
-      message.error(err.response?.data?.message || "Failed to delete project");
-    }
+    await deleteProject(id);
   };
 
   const handleSubmit = async (values) => {
     setSubmitting(true);
-    try {
-      const payload = {
-        name: values.name,
-        description: values.description,
-      };
-      if (values.managerId !== undefined && values.managerId !== "") {
-        payload.managerId = Number(values.managerId);
-      }
-      
-      if (editingProject) {
-        await api.put(`/projects/${editingProject.id}`, payload);
-        message.success("Project updated successfully!");
-      } else {
-        await api.post("/projects", payload);
-        message.success("Project created successfully!");
-      }
-      
+    const payload = {
+      name: values.name,
+      description: values.description,
+    };
+    if (values.managerId !== undefined && values.managerId !== "") {
+      payload.managerId = Number(values.managerId);
+    }
+    
+    let success;
+    if (editingProject) {
+      success = await updateProject(editingProject.id, payload);
+    } else {
+      success = await addProject(payload);
+    }
+    
+    if (success) {
       setIsModalOpen(false);
       form.resetFields();
-      fetchProjects(page);
-    } catch (err) {
-      message.error(err.response?.data?.message || "Failed to save project");
-    } finally {
-      setSubmitting(false);
     }
+    setSubmitting(false);
   };
 
   const getAssignedUsers = (tasks) => {
@@ -125,7 +93,7 @@ export default function Projects() {
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
-      <ProjectsHeader total={total} openAddModal={openAddModal} />
+      <ProjectsHeader total={pagination.total} openAddModal={openAddModal} />
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -145,10 +113,10 @@ export default function Projects() {
 
         {/* Pagination */}
         <Pagination
-          page={page}
-          totalPages={totalPages}
-          total={total}
-          limit={limit}
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={pagination.limit}
           onPageChange={handlePageChange}
         />
         </>
