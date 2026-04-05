@@ -55,8 +55,8 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col gap-8 h-screen sticky top-0 shadow-sm overflow-y-auto">
-      <div className="text-xl font-bold text-slate-900 tracking-widest flex items-center gap-2">
+    <aside suppressHydrationWarning className="w-64 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col gap-8 h-screen sticky top-0 shadow-sm overflow-y-auto">
+      <div suppressHydrationWarning className="text-xl font-bold text-slate-900 tracking-widest flex items-center gap-2">
         <span className="text-blue-500">Project</span>Manager
       </div>
 
@@ -80,7 +80,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto pt-6 border-t border-slate-200">
+      <div suppressHydrationWarning className="mt-auto pt-6 border-t border-slate-200">
         <button
           onClick={logout}
           className="flex items-center gap-3 px-4 py-3 w-full text-left text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all"

@@ -175,6 +175,7 @@ export const assignTask = async (req, res, next) => {
  */
 export const getTasks = async (req, res, next) => {
   try {
+    console.log("Fetching tasks for user:", req.user?.id, "with query:", req.query);
     const result = await taskService.getTasks(req.query, req.user);
     res.json({
       success: true,

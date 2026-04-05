@@ -34,6 +34,7 @@ export const useProjects = () => {
         try {
             await api.post("/projects", values);
             message.success("Project created successfully!");
+            await fetchProjects(pagination.page, pagination.limit);
             return true;
         } catch (err) {
             message.error(err.response?.data?.message || "Failed to create project");
@@ -45,6 +46,7 @@ export const useProjects = () => {
         try {
             await api.put(`/projects/${id}`, values);
             message.success("Project updated successfully!");
+            await fetchProjects(pagination.page, pagination.limit);
             return true;
         } catch (err) {
             message.error(err.response?.data?.message || "Failed to update project");
@@ -56,6 +58,7 @@ export const useProjects = () => {
         try {
             await api.delete(`/projects/${id}`);
             message.success("Project deleted successfully");
+            await fetchProjects(pagination.page, pagination.limit);
             return true;
         } catch (err) {
             message.error(err.response?.data?.message || "Failed to delete project");

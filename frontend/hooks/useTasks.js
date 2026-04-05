@@ -42,6 +42,7 @@ export const useTasks = () => {
         try {
             await api.post("/tasks", values);
             message.success("Task created successfully!");
+            await fetchTasks({ page: pagination.page, limit: pagination.limit });
             return true;
         } catch (err) {
             message.error(err.response?.data?.message || "Failed to create task");
@@ -53,6 +54,7 @@ export const useTasks = () => {
         try {
             await api.put(`/tasks/${id}`, values);
             message.success("Task updated successfully!");
+            await fetchTasks({ page: pagination.page, limit: pagination.limit });
             return true;
         } catch (err) {
             message.error(err.response?.data?.message || "Failed to update task");
@@ -64,6 +66,7 @@ export const useTasks = () => {
         try {
             await api.delete(`/tasks/${id}`);
             message.success("Task deleted successfully");
+            await fetchTasks({ page: pagination.page, limit: pagination.limit });
             return true;
         } catch (err) {
             message.error(err.response?.data?.message || "Failed to delete task");
